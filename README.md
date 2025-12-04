@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ﻿# Practica3
 ## Arquitectura integral (WebSocket / SignalR — C# .NET) — paso a paso
 1.	Ingesta (archivo CSV)
@@ -26,3 +27,6 @@ o	Dead-letter para filas con error, logs y métricas.
 ![Arquitectura integral (WebSocket/SignalR .NET)](assets/diagramaArquitectura.png)
 
 
+=======
+# Practica4
+>>>>>>> 76d16a78ed6b3e6c940c045654e522e1fbc546b4
