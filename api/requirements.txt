@@ -15,3 +15,7 @@ python-jose[cryptography]
 # Necesario para conectar a MongoDB Atlas con SRV
 dnspython
 python-multipart
+scikit-learn
+matplotlib
+
+

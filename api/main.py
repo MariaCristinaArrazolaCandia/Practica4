@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 
-from routes import user, upload, status as status_routes, data, ws, notify, dashboard, uploads
+from routes import user, upload, status as status_routes, data, ws, notify, dashboard, uploads, predictions, charts
 
 
 app = FastAPI(
@@ -39,7 +39,7 @@ async def generic_exception_handler(request: Request, exc: Exception):
 def root():
     return {"status": "ok", "message": "Backend Monitoreo GAMC funcionando"}
 
-
+app.mount("/static", StaticFiles(directory="static"), name="static")
 # Servir las imágenes generadas por el worker
 app.mount("/charts", StaticFiles(directory="/data/charts"), name="charts")
 
@@ -50,6 +50,8 @@ app.include_router(upload.router, prefix="/api")
 app.include_router(status_routes.router, prefix="/api")
 app.include_router(data.router, prefix="/api")
 app.include_router(dashboard.router, prefix="/api")
+app.include_router(predictions.router, prefix="/api", tags=["predictions"])
+app.include_router(charts.router, prefix="/api", tags=["charts"]) 
 
 # WebSocket (sin /api)
 app.include_router(ws.router)

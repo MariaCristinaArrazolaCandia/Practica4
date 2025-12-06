@@ -19,6 +19,8 @@ celery_app = Celery(
 # @celery_app.task(name="worker.tasks.procesar_csv")
 CELERY_TASK_NAME = "worker.tasks.procesar_csv"
 
+
+
 INCOMING_DIR = Path("/data/incoming")
 
 
@@ -43,8 +45,11 @@ async def upload_csv(file: UploadFile = File(...)) -> Dict:
 
         # Disparar tarea Celery en el worker, por nombre
         # El worker debe tener @celery_app.task(name="worker.tasks.procesar_csv")
-        celery_app.send_task(CELERY_TASK_NAME, args=[str(save_path)])
-
+        
+        celery_app.send_task(
+            CELERY_TASK_NAME,
+            args=[str(save_path)],
+            queue="default", )
         return {
             "ok": True,
             "filename": file.filename,
