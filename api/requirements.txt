@@ -1,0 +1,17 @@
+fastapi
+uvicorn
+websockets
+pymongo
+bcrypt
+mysql-connector-python
+python-dotenv
+aiofiles
+pandas
+numpy
+celery
+pika
+passlib[bcrypt]
+python-jose[cryptography]
+# Necesario para conectar a MongoDB Atlas con SRV
+dnspython
+python-multipart

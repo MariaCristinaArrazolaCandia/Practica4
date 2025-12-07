@@ -1,0 +1,77 @@
+services:
+  backend:
+    build: ./api
+    env_file:
+      - ./api/.env
+    command: uvicorn main:app --host 0.0.0.0 --port 8070 --reload
+    volumes:
+      - ./api:/app
+      - ./data:/data
+    ports:
+      - "8070:8070"
+    depends_on:
+      - mysql
+      - mongo
+      - rabbitmq
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      # command: npm start
+    container_name: frontend-react
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+    environment:
+      - CHOKIDAR_USEPOLLING=true
+    # ==========================================================
+    # MODIFICACIÓN CLAVE: VOLÚMENES PARA SINCRONIZACIÓN DE CÓDIGO
+    # ==========================================================
+    volumes:
+      # Sincroniza su código fuente (src, public, package.json)
+      - ./frontend:/frontend
+      # Excluye la carpeta node_modules para evitar errores de permisos/compatibilidad
+      - /frontend/node_modules
+  worker:
+    build: ./worker
+    # 👇 AQUÍ EL CAMBIO IMPORTANTE:
+    command: celery -A tasks worker --loglevel=info
+    volumes:
+      - ./worker:/worker
+      - ./data:/data
+    depends_on:
+      - rabbitmq
+      - mysql
+      - mongo
+      # backend ya no es estrictamente necesario para que el worker inicie,
+      # pero si quieres lo puedes dejar. Lo quité porque Celery solo necesita RabbitMQ.
+
+  mysql:
+    image: mysql:8
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: sensor_monitoring
+    volumes:
+      - ./base.sql:/docker-entrypoint-initdb.d/base.sql
+      - mysql_data:/var/lib/mysql
+    ports:
+      - "3307:3306" # mapeo a 3307 para evitar conflictos si tienes MySQL local
+
+  mongo:
+    image: mongo:6
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672" # broker AMQP que Celery va a usar
+      - "15672:15672" # panel web de RabbitMQ
+
+volumes:
+  mysql_data:
+  mongo_data:
