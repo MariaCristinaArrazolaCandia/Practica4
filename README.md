@@ -135,7 +135,11 @@ El sistema usa por defecto:
 * `Mongo`: host `mongo`, base `etl_system`
 * `RabbitMQ`: host `rabbitmq`
 
-No es necesario modificar nada para ambiente local.
+Para ambiente local.
+ejecutar el base.sql en mysql que se encuentra en el proyecto 
+
+de la misma manera ejecutar el dataPopulator.py que se enceuntra dentro d ela carpeta del frontend
+esto llenara los datos para el mongoDB
 
 ---
 
