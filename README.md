@@ -145,11 +145,21 @@ docker compose exec -T mysql mysql -u root -proot123 < base.sql
 de la misma manera ejecutar el dataPopulator.py que se enceuntra dentro d ela carpeta del frontend
 esto llenara los datos para el mongoDB
 
-para esto primero tenemos que crear el entorno virtual
+para esto primero tenemos que 
+
+# crear el entorno virtual
 
 python -m venv .venv
 
-luego instalar lo necesario en el entorno virtual
+# Activar el entorno virtual
+
+.\.venv\Scripts\activate
+
+# Instalar dependencias
+
+pip install pymongo bcrypt
+
+# luego instalar lo necesario en el entorno virtual
 
 pip install --upgrade pip
 
