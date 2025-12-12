@@ -139,6 +139,8 @@ Para ambiente local.
 
 Ejecutar el base.sql en mysql que se encuentra en el proyecto 
 
+docker compose exec -T mysql mysql -u root -proot123 < base.sql
+
 
 de la misma manera ejecutar el dataPopulator.py que se enceuntra dentro d ela carpeta del frontend
 esto llenara los datos para el mongoDB
@@ -150,6 +152,7 @@ python -m venv .venv
 luego instalar lo necesario en el entorno virtual
 
 pip install --upgrade pip
+
 pip install -r requirements.txt
 
 
