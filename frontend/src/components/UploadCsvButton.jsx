@@ -11,8 +11,9 @@ function UploadCsvButton({ onStatusChange }) {
 
     setUploading(true);
 
+    // Mensaje inicial
     if (onStatusChange) {
-      onStatusChange("Subiendo CSV al servidor...");
+      onStatusChange(`Subiendo "${file.name}" al servidor...`);
     }
 
     try {
@@ -36,8 +37,11 @@ function UploadCsvButton({ onStatusChange }) {
       const data = await res.json();
       console.log("Respuesta upload:", data);
 
+      // Mensaje cuando el backend ya aceptó el archivo
       if (onStatusChange) {
-        onStatusChange("CSV enviado. El worker está procesando...");
+        onStatusChange(
+          `CSV enviado (${file.name}). El worker está procesando el archivo...`
+        );
       }
     } catch (err) {
       console.error("Error al subir CSV:", err);
@@ -47,6 +51,7 @@ function UploadCsvButton({ onStatusChange }) {
       alert("Error al subir CSV. Revisa la consola para más detalles.");
     } finally {
       setUploading(false);
+      // Permite volver a seleccionar el mismo archivo si se desea
       event.target.value = "";
     }
   };
