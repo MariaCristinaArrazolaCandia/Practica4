@@ -136,10 +136,22 @@ El sistema usa por defecto:
 * `RabbitMQ`: host `rabbitmq`
 
 Para ambiente local.
-ejecutar el base.sql en mysql que se encuentra en el proyecto 
+
+Ejecutar el base.sql en mysql que se encuentra en el proyecto 
+
 
 de la misma manera ejecutar el dataPopulator.py que se enceuntra dentro d ela carpeta del frontend
 esto llenara los datos para el mongoDB
+
+para esto primero tenemos que crear el entorno virtual
+
+python -m venv .venv
+
+luego instalar lo necesario en el entorno virtual
+
+pip install --upgrade pip
+pip install -r requirements.txt
+
 
 ---
 
