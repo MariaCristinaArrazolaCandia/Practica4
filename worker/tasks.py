@@ -239,7 +239,40 @@ def procesar_csv(path_csv: str) -> dict:
                     if not time_dt:
                         skipped_bad_time += 1
                         continue
+                    # Asegurar que el dispositivo exista en la tabla devices
+                    device_name = row.get("deviceInfo.deviceName")
+                    application_name = row.get("deviceInfo.applicationName")
+                    tenant_name = row.get("deviceInfo.tenantName")
+                    device_profile_name = row.get("deviceInfo.deviceProfileName")
+                    address = row.get("tags.direccion") or row.get("tags.address")
 
+                    cursor.execute(
+                        """
+                        INSERT INTO devices (
+                            dev_eui,
+                            device_name,
+                            application_name,
+                            tenant_name,
+                            device_profile_name,
+                            address
+                        )
+                        VALUES (%s, %s, %s, %s, %s, %s)
+                        ON DUPLICATE KEY UPDATE
+                            device_name = VALUES(device_name),
+                            application_name = VALUES(application_name),
+                            tenant_name = VALUES(tenant_name),
+                            device_profile_name = VALUES(device_profile_name),
+                            address = VALUES(address)
+                        """,
+                        (
+                            dev_eui,
+                            device_name,
+                            application_name,
+                            tenant_name,
+                            device_profile_name,
+                            address,
+                        )
+                    )       
                     # INSERT/UPDATE uplinks
                     dedup_id = row.get("context.deduplication_id") or row.get("deduplicationId")
 

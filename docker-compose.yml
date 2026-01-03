@@ -4,6 +4,12 @@ services:
     build: ./api
     env_file:
       - ./api/.env
+    environment:
+      # 👇 asegúrate que backend y worker usan el MISMO broker/result backend
+      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
+      - CELERY_RESULT_BACKEND=rpc://
+      # 👇 URL interna del backend para que el worker le avise cuando termine el CSV
+      - BACKEND_NOTIFY_URL=http://backend:8070/api/notify/csv-completed
     command: uvicorn main:app --host 0.0.0.0 --port 8070 --reload
     volumes:
       - ./api:/app
@@ -20,27 +26,30 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    # command: npm start
     container_name: frontend-react
+    working_dir: /app
+    command: ["npm", "start"]
     ports:
       - "3000:3000"
     depends_on:
       - backend
     environment:
       - CHOKIDAR_USEPOLLING=true
-    # ==========================================================
-    # VOLÚMENES PARA SINCRONIZACIÓN DE CÓDIGO DEL FRONT
-    # ==========================================================
     volumes:
-      # Código fuente del frontend
-      - ./frontend:/frontend
-      # NO montar node_modules desde el host
-      - /frontend/node_modules
-
+    # Montamos el código fuente dentro de /app (que será el WORKDIR)
+      - ./frontend:/app
+    # node_modules SOLO dentro del contenedor (no se pisan con el host)
+    #  - /app/node_modules
   worker:
     build: ./worker
     # 👇 IMPORTANTE: apunta al objeto celery_app definido en tasks.py
     command: celery -A tasks.celery_app worker --loglevel=info
+    working_dir: /worker   
+    environment:
+      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
+      - CELERY_RESULT_BACKEND=rpc://
+      - BACKEND_NOTIFY_URL=http://backend:8070/api/notify/csv-completed
+    
     volumes:
       - ./worker:/worker
       - ./data:/data

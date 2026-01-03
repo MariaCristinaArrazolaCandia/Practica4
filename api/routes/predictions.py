@@ -12,7 +12,8 @@ import matplotlib
 matplotlib.use("Agg")  # Backend sin interfaz gráfica para Docker
 import matplotlib.pyplot as plt
 
-from sklearn.linear_model import LinearRegression
+# 🔁 CAMBIO: usamos RandomForest en vez de LinearRegression
+from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import r2_score, mean_squared_error, mean_absolute_error
 
 # ============================
@@ -47,7 +48,7 @@ TEST_SIZE = 0.2  # 20% test
 @router.post("/run")
 def run_noise_predictions():
     """
-    Ejecuta el modelo de regresión lineal sobre el CSV de sonido,
+    Ejecuta un modelo de regresión (RandomForest) multivariante sobre el CSV de sonido,
     guarda tres gráficos en /static/predictions y devuelve métricas + URLs.
     """
     try:
@@ -105,7 +106,7 @@ def run_noise_predictions():
                 )
 
         # -----------------------------------
-        # 3) FEATURES PARA EL MODELO
+        # 3) FEATURES PARA EL MODELO (MULTIVARIANTE)
         # -----------------------------------
         if AGGREGATE_WEEKLY:
             df_agg = (
@@ -126,13 +127,42 @@ def run_noise_predictions():
 
             feature_cols = ["year", "weekofyear"]
             target_col = "object.LAeq"
+
         else:
+            # ======================
+            # MODO POR MEDICIÓN
+            # ======================
+            # 1) Features temporales básicas
             df["hour"] = df["time"].dt.hour
-            df["dayofweek"] = df["time"].dt.dayofweek
+            df["dayofweek"] = df["time"].dt.dayofweek  # 0 = lunes, 6 = domingo
             df["is_weekend"] = (df["dayofweek"] >= 5).astype(int)
 
-            feature_cols = ["hour", "dayofweek", "is_weekend"]
+            # 2) Features cíclicas
+            df["hour_sin"] = np.sin(2 * np.pi * df["hour"] / 24)
+            df["hour_cos"] = np.cos(2 * np.pi * df["hour"] / 24)
+            df["day_sin"] = np.sin(2 * np.pi * df["dayofweek"] / 7)
+            df["day_cos"] = np.cos(2 * np.pi * df["dayofweek"] / 7)
+
+            # 3) Features adicionales de la propia señal (multivariante real)
+            extra_features = []
+            for col in ["object.LAI", "object.LAImax"]:
+                if col in df.columns:
+                    extra_features.append(col)
+
+            feature_cols = [
+                "hour",
+                "dayofweek",
+                "is_weekend",
+                "hour_sin",
+                "hour_cos",
+                "day_sin",
+                "day_cos",
+            ] + extra_features
+
             target_col = "object.LAeq"
+
+        # Limpiamos filas que tengan NaN en las features o en el target
+        df = df.dropna(subset=feature_cols + [target_col])
 
         X = df[feature_cols]
         y = df[target_col]
@@ -152,9 +182,14 @@ def run_noise_predictions():
         y_train, y_test = y.iloc[:split_idx], y.iloc[split_idx:]
 
         # -----------------------------------
-        # 5) MODELO
+        # 5) MODELO (RandomForest multivariante)
         # -----------------------------------
-        model = LinearRegression()
+        model = RandomForestRegressor(
+            n_estimators=200,
+            max_depth=None,
+            random_state=42,
+            n_jobs=-1
+        )
         model.fit(X_train, y_train)
         y_pred = model.predict(X_test)
 
@@ -240,6 +275,7 @@ def run_noise_predictions():
                 "n_total": int(n),
                 "n_train": int(len(X_train)),
                 "n_test": int(len(X_test)),
+                "features": feature_cols,
             },
             "plots": {
                 "time_series": "/static/predictions/serie_tiempo.png",
